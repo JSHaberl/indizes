@@ -17,6 +17,11 @@ if genvalue - fillcheck > 0:
     for x in range(genvalue):
         cur.execute("INSERT INTO personen(vorname,nachname) VALUES(?, ?)", (faker.first_name(), faker.last_name()),)
     con.commit()
+
+cur.execute("CREATE INDEX IF NOT EXISTS idx_fullname ON personen (vorname, nachname) ")
+if input() == ("Y" or "y"):
+    cur.execute("DROP INDEX idx_fullname")
+con.commit()
     
 uniquenames = cur.execute("SELECT DISTINCT(concat(vorname, ' ', nachname)) FROM personen").fetchall()
 uniquenamestotal = len(uniquenames)
@@ -25,7 +30,6 @@ avg = genbase / uniquenamestotal
 summe = 0
 for x in range(uniquenamestotal):
    summe += (uniquenamescount[x][0] - avg)**2
-
 
 print(f"Varianz: {summe/genbase}")
 con.close()
