@@ -3,25 +3,31 @@ from faker import Faker
 
 faker = Faker()
 genbase = 500000
-genvalue = genbase
 
 con = sqlite3.connect("mydb.db")
 cur = con.cursor()
+if input("Delete database?: ")  == ("Y" or "y"):
+    cur.execute("DROP TABLE IF EXISTS personen")
+con.commit()
 cur.execute("CREATE TABLE IF NOT EXISTS personen(id, vorname, nachname)")
-fillcheck = cur.execute("SELECT COUNT(*) FROM personen").fetchall()[0][0]
 
-print(fillcheck)
+def generatedata(genrange: int,genmult: int = 1, first_namelist: list = [], last_namelist: list = []):
+    fillcheck = cur.execute("SELECT COUNT(*) FROM personen").fetchall()[0][0]
+    if genrange - fillcheck > 0:
+        genrange -= fillcheck
+        genrange = genrange / genmult
+        genrange = int(genrange)
+        for y in range(genmult):
+            for x in range(genrange):
+                cur.execute("INSERT INTO personen(vorname,nachname) VALUES(?, ?)", (faker.first_name() if y >= len(first_namelist) else first_namelist[y],faker.last_name() if y >= len(last_namelist) else last_namelist[y]))
+        con.commit()
 
-if genvalue - fillcheck > 0:
-    genvalue -= fillcheck
-    for x in range(genvalue):
-        cur.execute("INSERT INTO personen(vorname,nachname) VALUES(?, ?)", (faker.first_name(), faker.last_name()),)
-    con.commit()
+generatedata(genbase, 2, ["Joe"])
 
 cur.execute("CREATE INDEX IF NOT EXISTS idx_fullname ON personen (vorname, nachname) ")
 if input() == ("Y" or "y"):
     cur.execute("DROP INDEX idx_fullname")
-con.commit()
+    con.commit()
     
 uniquenames = cur.execute("SELECT DISTINCT(concat(vorname, ' ', nachname)) FROM personen").fetchall()
 uniquenamestotal = len(uniquenames)
